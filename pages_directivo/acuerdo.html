@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+		<html ng-app='secreto'>
+		<head>
+			<meta name="viewport" content="width=device-width, initial-scale=1">
+			<meta http-equiv="Content-Security-Policy" content="default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval'">
+			<meta name="msapplication-tap-highlight" content="no" />
+			<meta charset="utf-8" >
+			<title>SECRETO</title>
+			<script type="text/javascript" src="../js/jquery-2.0.0.min.js"></script>
+			<script type="text/javascript" src="../js/angular.min.js"></script>
+			<script type="text/javascript" src="../js/socket.io-1.3.7.js"></script>
+			<script type="text/javascript" src="../js/materialize.min.js"></script>
+			<script type="text/javascript" src="../js/plugins.min.js"></script>
+			<script type="text/javascript" src="../js/perfect-scrollbar.min.js"></script>
+			<script type="text/javascript" src="../js/app_directivo.js"></script>
+			<!--<script type="text/javascript" src="../cordova.js"></script>-->
+			<script type="text/javascript" src="../js/PushNotification.js"></script>
+			<script type="text/javascript" src="../vibration.js"></script>
+			<script type="text/javascript" src="../notification.js"></script>
+			<script type="text/javascript" src="../js/background-mode.js"></script>
+			<script type="text/javascript">
+			document.addEventListener('deviceready', function () {
+					/*var pushNotification = window.plugins.pushNotification;
+
+					pushNotification.register(
+					    successHandler, 
+					    errorHandler, 
+					    {
+					        'senderID':'AIzaSyDygFc2MFOyCzldXMva-HhMZZQA9lW1-Yc',
+					        'ecb':'onNotificationGCM' // callback function
+					    }
+					);*/
+				    // Android customization
+				    cordova.plugins.backgroundMode.setDefaults({ text:'Doing heavy tasks.'});
+				    // Enable background mode
+				    cordova.plugins.backgroundMode.enable();
+
+				    // Called when background mode has been activated
+				    cordova.plugins.backgroundMode.onactivate = function () {
+				        setTimeout(function () {
+				            // Modify the currently displayed notification
+				            cordova.plugins.backgroundMode.configure({
+				                text:'Running in background for more than 5s now.'
+				            });
+				        }, 5000);
+				    }
+				}, false);
+				/*function successHandler(result) {
+				    alert('Success: '+ result);
+				}
+				function errorHandler(error) {
+				    alert('Error: '+ error);
+				}
+				function onNotificationGCM(e) {
+				    switch( e.event )
+			        {
+			            case 'registered':
+			                if ( e.regid.length > 0 )
+			                {
+			                    console.log("Regid " + e.regid);
+			                    alert('registration id = '+e.regid);
+			                }
+			            break;
+			 
+			            case 'message':
+			              // this is the actual push notification. its format depends on the data model from the push server
+			              alert('message = '+e.message+' msgcnt = '+e.msgcnt);
+			            break;
+			 
+			            case 'error':
+			              alert('GCM error = '+e.msg);
+			            break;
+			 
+			            default:
+			              alert('An unknown GCM event has occurred');
+			              break;
+			        }
+				}*/
+			</script>
+			<link rel='shortcut icon' type='image/x-icon' href='images/logo.png') />
+			<link rel='stylesheet' href='../css/materialize.css'/>
+			<link rel='stylesheet' href='../css/materialize.min.css'/>
+			<link rel='stylesheet' href='../css/perfect-scrollbar.css'/>
+			<link rel='stylesheet' href='../css/style.min.css'/>
+		</head>
+		<body ng-controller='directivoController'>
+			<div id="loader-wrapper">
+		        <div id="loader"></div>        
+		        <div class="loader-section section-left"></div>
+		        <div class="loader-section section-right"></div>
+	    	</div>
+			<!-- Menú y encabezado -->
+			<header id="header" class="page-topbar">
+        		<!-- start header nav-->
+        		<div class="navbar-fixed">
+            		<nav class="navbar-color">
+                		<div class="nav-wrapper">
+                    		<ul class="left">                      
+                    			<li><a href="directivo.html" style="font-size: 1.5rem;margin-left:10px;"><i class='mdi-navigation-arrow-back'></i></a></li>
+                      			<li><h1 class="logo-wrapper"><a href="directivo.html" class="brand-logo darken-1"><img src="../img/logo.png" alt=""></a> <span class="logo-text">SECRETO</span></h1></li>
+                    		</ul>
+	                	</div>
+            		</nav>
+        		</div>
+        		<!-- end header nav-->
+    		</header>
+    <!-- END HEADER -->
+    <div class="container">
+    	<div id="mensaje" style="margin-left:35%;margin-top:5%;"></div>
+    	<div ng-if='acuerdo._id'>
+			<div class="card large">
+	    		<div class="card-image waves-effect waves-block waves-light red">
+	      			<div class="row" style="height: 40%;"></div>
+	    		</div>
+	    		<div class="card-content">
+				    <span class="card-title activator grey-text text-darken-4">Acuerdo: {{acuerdo.ACUNAC}}<i class="mdi-editor-mode-edit right"></i></span>
+				    <p style="color: grey">
+						<b>Descripción: {{acuerdo.ACUDES}}</b><br>
+						La fecha límite para cumplir con el acuerdo es el {{acuerdo.ACUTIM}} <br>
+						<b>{{dias_para_junta}}</b>
+						<br>
+						<b>Estado {{acuerdo.ACUSTA}}</b>
+						<br>
+						<div ng-if='bloqueado=="true" && acuerdo.ACUSTA!="Terminada"'>
+							<a href="#" class="btn right" id="entregablebtn">
+								<i class='mdi-file-cloud-upload'></i> Subir entregable
+							</a>
+						</div>
+						<div ng-if='tareas.length > 0'>
+							<h5>Tareas</h5>
+						    <table>
+								<thead>
+							    	<td>Tarea</td>
+							    	<td>Estado</td>
+							    </thead>
+							    <tr ng-repeat='d in tareas'>
+							    	<td >{{d.ACUDES}}</td>
+							    	<td >{{d.ACUSTA}}</td>
+							    </tr>
+							</table>
+						</div>
+					</p>
+	    		</div>
+	    		<div class="card-reveal">
+	    			<div ng-if='acuerdo.ACUSTA=="Terminada"'>
+	    				<span class="card-title grey-text text-darken-4">El acuerdo ya esta terminado.<i class='mdi-navigation-close right'></i></span>
+	    				<br>
+	    				<h5>Entregable</h5>
+	    				<img ng-if='type_file=="img"' src="{{url_final}}" class="responsive-img">
+	    				<a ng-if='type_file=="pdf"' target="black" href="{{url_final}}">Ver documento</a>
+	    			</div>
+	    			<div ng-if='acuerdo.ACUSTA!="Terminada"'>
+	      			<span class="card-title grey-text text-darken-4">Asignar tareas<i class='mdi-navigation-close right'></i></span>
+	      			<form class="form-horizontal" role="form" ng-submit="nuevaTarea(acuerdo._id)">					    
+	      				<div class="form-group">
+								    	<label for="ACUCJU">Clave de la tarea</label>
+								        <div class="col s12 m12 l12">
+								    	    <input class="form-control" id="ACUCJU" type="text" class="validate" ng-model="tarea.ACUCJU" required>
+								        </div>
+							        </div>
+					              	<div class="form-group">
+					                	<label class="col-sm-1 control-label">Persona a cargo</label>
+					                	<div class="col-sm-12">
+					                  		<select class="browser-default" ng-model="tarea.ACUCPE" required>
+					                    		<option ng-repeat="d in personas" value="{{d._id}}">{{d.nombreC}}</option>
+					                  		</select>
+					                	</div>
+					             	</div>
+					             	<div class="form-group">
+								    	<label for="ACUDES">Descripción</label>
+								        <div class="col s12 m12 l12">
+								        	<textarea class="form-control" id="ACUDES" class="validate" ng-model="tarea.ACUDES" required></textarea>
+								        </div>
+							        </div>
+							        <div class="form-group">
+								    	<label for="ACUTIM">Días</label>
+								        <div class="col s12 m12 l12">
+								    	    <input class="form-control" id="ACUTIM" type="number" maxlength="2" class="validate" ng-model="tarea.ACUTIM" required>
+								        </div>
+							        </div>
+							        <div class="form-group">
+								    	<label for="ACUENT">Entregable</label>
+								        <div class="col s12 m12 l12">
+								    	    <input class="form-control" id="ACUENT" type="text" class="validate" ng-model="tarea.ACUENT" required>
+								        </div>
+							        </div>
+							        <div class="form-group">
+								        <div class="input-field col s12">
+					            			<i class="mdi-editor-attach-money prefix"></i>
+					            			<input type="number" class="form-control"  ng-model="tarea.ACUPRE" step='0.01' required>
+											<label for="clave">Presupuesto</label>
+					          			</div>
+							        </div>
+							        <p>
+							    		<a href="#" class="btn-flat" id="dependencias">
+							    			Añadir dependencias de tareas
+							    		</a>
+							    	</p>
+							    	<div ng-if='checkedDependencias.length > 0' style="width:auto;height:200px;overflow-y:scroll;">
+		        		
+						        		<h5>Dependencias</h5>
+						        		<table>
+							        		<thead>
+							        			<td>Depende de</td>
+							        		</thead>
+							        		<tr ng-repeat='descripcion in checkedDependencias'>
+							        			<td >{{descripcion}}</td>
+							        		</tr>
+							        	</table>
+		        					</div>
+					    <div class="form-group">
+							<button type="submit" class="btn btn waves-effect waves-red right">Agregar</button>
+						</div>  
+						
+				    </form>  
+				    </div>
+	    		</div>
+	  		</div>
+  		</div>
+    </div>
+    <div id="inv" class="modal">
+							<div class="modal-content">
+								<div class="row">
+									<div class="col s12">
+										<h6 style="text-align:center;" class="grey-text">Añadir Dependencias</h6>
+									</div>
+								</div>
+								<form class="col s12">
+							        <div class="input-field">
+							            <i class="mdi-action-search prefix"></i>
+							            <input id="icon_prefix" type="text" class="validate" ng-model='busqueda'>
+							        	<label for="icon_prefix" class="">Buscar</label>
+							        </div>
+								</form>
+					          	<span ng-repeat="c in tareas|filter:busqueda">
+									<input type='checkbox' ng-click='addDependencia(c._id,c.ACUCJU,c.ACUDES)' id="{{c._id}}" value="{{c._id}}" check-list='checkedEmpleados'>
+									<label style="color:black;" for="{{c._id}}">
+											<b class="grey-text">{{c.ACUDES}}</b>
+									</label>
+									<br><br>
+								</span>
+							</div>
+							<div class="modal-footer">
+								
+								<a class="modal-action modal-close wavs-effects wavs-green btn-flat" ng-click='limpiar()'>Cancelar</a>
+								<button id="enviarInvitaciones" class="modal-action modal-close wavs-effects wavs-green btn-flat">Añadir</button>
+							</div>
+						</div>
+	<div id="entregable" class="modal">
+		<div class="modal-content">
+			<div ng-if='bloqueado=="false"'>
+	    		<span class="card-title grey-text text-darken-4">No puedes subir tu entregable hasta que las tareas se terminen.<i class='mdi-navigation-close right'></i></span>
+	    	</div>
+	    	<div ng-if='acuerdo.ACUSTA=="Terminada"'>
+	    		<span class="card-title grey-text text-darken-4">La tarea ya esta terminada.<i class='mdi-navigation-close right'></i></span>
+	    		<br>
+	    		<h5>Entregable</h5>
+	    		<img src="{{url_final}}" class="responsive-img">
+	    	</div>
+	    	<div ng-if='bloqueado=="true" && acuerdo.ACUSTA!="Terminada"'>
+	      		<span class="card-title grey-text text-darken-4">Subir entregable<i class='mdi-navigation-close right'></i></span>
+	      		<form class="form-horizontal" role="form"  enctype='multipart/form-data'>
+	      			<div class="form-group">
+						<label for="ACUCJU">Nombre</label>
+						<div class="col s12 m12 l12">
+							<input class="form-control" id="ACUCJU" ng-model='filename' name="nombre" type="text" class="validate" required>
+						</div>
+					</div>
+					<div class="file-field input-field">
+			      		<div class="btn">
+			        		<span>Archivo</span>
+			        		<input type="file" file-model="myFile" name='photo'>
+			      		</div>
+			      		<div class="file-path-wrapper">
+			       		    <input class="file-path validate" type="text">
+			      		</div>
+			    	</div>
+				    <div class="form-group">
+						<button type="button" ng-click='entregable(filename, myFile)' class="btn btn waves-effect waves-red right">Aceptar</button>
+					</div>  
+			    </form>  
+			</div>
+		</div>
+	</div>
+</body>
+</html>		
